@@ -1,1 +1,1 @@
-This repository reflects the learnings of mentees in the Summer Project - The Mind's Mirror offered by the Brain and Cognitive Society, IITK. The aim of the project is to develop a visual object classifier and driven by human brain signals, effectively reading the mind. .
+- This repository reflects the learnings of mentees in the Summer Project - The Mind's Mirror offered by the Brain and Cognitive Society, IITK. The aim of the project is to develop a visual object classifier and driven by human brain signals, effectively reading the mind. .
