@@ -1,0 +1,87 @@
+graphs:
+
+  - id: Broker
+    nodes:
+    - id: broker
+      module: timeflux.nodes.zmq
+      class: Broker
+
+  - id: EEG
+    nodes:
+    - id: eeg
+      module: timeflux.nodes.lsl
+      class: Receive
+      params:
+        prop: name
+        value: ORIC
+        clocksync: true
+        dejitter: true
+        monotonize: true
+        channels: [ Cz, P3, Pz, P4, T5, O1, O2, T6 ]
+    - id: notch
+      module: timeflux_dsp.nodes.filters
+      class: IIRFilter
+      params:
+        filter_type: bandstop
+        frequencies: [45, 55]
+        order: 1
+    - id: bandpass
+      module: timeflux_dsp.nodes.filters
+      class: IIRFilter
+      params:
+        filter_type: bandpass
+        frequencies: [1, 40]
+        order: 2
+    - id: pub_raw
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: raw
+    - id: pub_filtered
+      module: timeflux.nodes.zmq
+      class: Pub
+      params:
+        topic: filtered
+    edges:
+      - source: eeg
+        target: pub_raw
+      - source: eeg
+        target: notch
+      - source: notch
+        target: bandpass
+      - source: bandpass
+        target: pub_filtered
+    rate: 10
+
+  - id: UI
+    nodes:
+    - id: ui
+      module: timeflux_ui.nodes.ui
+      class: UI
+    - id: subscribe
+      module: timeflux.nodes.zmq
+      class: Sub
+      params:
+        topics: [ filtered ]
+    edges:
+      - source: subscribe:filtered
+        target: ui:eeg
+    rate: 30
+
+  - id: Recorder
+    nodes:
+    - id: subscribe
+      module: timeflux.nodes.zmq
+      class: Sub
+      params:
+        topics: [ raw, filtered ]
+    - id: save
+      module: timeflux.nodes.hdf5
+      class: Save
+      params:
+        path: .
+    edges:
+      - source: subscribe:raw
+        target: save:raw
+      - source: subscribe:filtered
+        target: save:filtered
